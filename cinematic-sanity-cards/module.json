@@ -1,0 +1,25 @@
+{
+  "id": "cinematic-sanity-cards",
+  "title": "Cinematic Sanity Cards",
+  "description": "Show uploaded card images to selected players with a cinematic fullscreen totem reveal animation.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "authors": [
+    {
+      "name": "OpenAI"
+    }
+  ],
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/cinematic-sanity-cards.css"
+  ],
+  "socket": true,
+  "url": "",
+  "manifest": "",
+  "download": ""
+}
