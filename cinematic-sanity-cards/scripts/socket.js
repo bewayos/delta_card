@@ -7,6 +7,7 @@ export function registerSocket() {
   game.socket.on(SOCKET_NAME, (payload) => {
     if (payload?.action !== "showCard") return;
     if (payload.targetUserId !== game.user?.id) return;
+    if (!game.users?.get(payload.senderId)?.isGM) return;
     PlayerOverlay.show(payload.card, payload.folder ?? null, CardStore.getOptions());
   });
 }
@@ -24,7 +25,7 @@ export function sendCardReveal({ targetUserId, card, folder = null, revealMode =
     ui.notifications.warn("Choose a valid card with an image.");
     return false;
   }
-  game.socket.emit(SOCKET_NAME, { action: "showCard", targetUserId, card, folder, revealMode });
+  game.socket.emit(SOCKET_NAME, { action: "showCard", senderId: game.user.id, targetUserId, cardId: card.id, card, folder, revealMode });
   if (targetUserId === game.user.id) PlayerOverlay.show(card, folder, CardStore.getOptions());
   return true;
 }

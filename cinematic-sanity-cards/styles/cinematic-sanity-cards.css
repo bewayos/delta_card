@@ -105,27 +105,38 @@
 
 .csc-card-frame {
   position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  width: fit-content;
   max-width: 70vw;
   max-height: 82vh;
   margin: 0;
-  padding: 10px;
+  padding: 3px;
   background: #050707;
   border: 1px solid #67fff0;
-  box-shadow: 0 0 18px rgba(0, 255, 220, 0.72), 0 0 60px rgba(0, 120, 150, 0.38);
+  box-shadow: 0 0 12px rgba(0, 255, 220, 0.72), 0 0 34px rgba(0, 120, 150, 0.34);
   animation: csc-totem-reveal 1.6s cubic-bezier(0.2, 0.8, 0.18, 1) both;
+}
+
+.csc-card-image-wrap {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 70vw;
+  max-height: 82vh;
+  line-height: 0;
 }
 
 .csc-card-frame img {
   display: block;
   max-width: 70vw;
-  max-height: 76vh;
+  max-height: calc(82vh - 2rem);
   object-fit: contain;
   background: #101010;
 }
 
 .csc-card-frame figcaption {
   text-align: center;
-  margin-top: 0.4rem;
+  margin-top: 0.25rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -218,4 +229,35 @@
 
 @keyframes csc-collapse {
   to { transform: translate(calc(50vw - 70px), calc(50vh - 80px)) scale(0.08); opacity: 0; }
+}
+
+.cinematic-sanity-cards .window-content,
+.cinematic-sanity-cards .standard-form {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.cinematic-sanity-cards .csc-gm-panel {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.csc-checkbox {
+  flex-direction: row;
+  align-items: center;
+}
+
+.csc-path-row {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.csc-path-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.csc-path-row .csc-volume {
+  flex: 0 0 4.5rem;
 }
