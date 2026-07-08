@@ -98,9 +98,11 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
       await CardStore.setOptions({
         enableSound: this.element.querySelector("[name='enableSound']")?.checked,
         revealAccentSound: this.element.querySelector("[name='revealAccentSound']")?.value,
+        revealAccentVolume: this.element.querySelector("[name='revealAccentVolume']")?.value,
         revealHumSound: this.element.querySelector("[name='revealHumSound']")?.value,
+        revealHumVolume: this.element.querySelector("[name='revealHumVolume']")?.value,
         hideSound: this.element.querySelector("[name='hideSound']")?.value,
-        volume: this.element.querySelector("[name='volume']")?.value
+        hideVolume: this.element.querySelector("[name='hideVolume']")?.value
       });
       ui.notifications.info("Sound options saved.");
       this.render({ force: true });

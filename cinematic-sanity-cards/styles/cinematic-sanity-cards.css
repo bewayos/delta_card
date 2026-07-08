@@ -257,3 +257,7 @@
   flex: 1;
   min-width: 0;
 }
+
+.csc-path-row .csc-volume {
+  flex: 0 0 4.5rem;
+}

@@ -10,8 +10,8 @@ export class PlayerOverlay {
     this.current = { card, folder, options };
     this.#removeOverlay();
     this.#removeIcon();
-    this.#playSound(options.revealAccentSound, options);
-    this.#playSound(options.revealHumSound, options);
+    this.#playSound(options.revealAccentSound, options.revealAccentVolume, options);
+    this.#playSound(options.revealHumSound, options.revealHumVolume, options);
 
     const overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
@@ -45,7 +45,7 @@ export class PlayerOverlay {
   static collapse({ playSound = true } = {}) {
     const overlay = document.getElementById(OVERLAY_ID);
     if (!overlay || !this.current || overlay.classList.contains("csc-collapsing")) return;
-    if (playSound) this.#playSound(this.current.options?.hideSound, this.current.options);
+    if (playSound) this.#playSound(this.current.options?.hideSound, this.current.options?.hideVolume, this.current.options);
     overlay.classList.add("csc-collapsing");
     window.setTimeout(() => {
       this.#removeOverlay();
@@ -57,9 +57,9 @@ export class PlayerOverlay {
     this.collapse({ playSound: true });
   }
 
-  static #playSound(src, options = {}) {
+  static #playSound(src, soundVolume, options = {}) {
     if (!options.enableSound || !src) return;
-    const volume = Number(options.volume ?? 0.8);
+    const volume = Number(soundVolume);
     try {
       foundry.audio?.AudioHelper?.play?.({
         src,
@@ -68,7 +68,7 @@ export class PlayerOverlay {
         loop: false
       }, false)?.catch?.(() => {});
     } catch (error) {
-      // Placeholder or missing audio files should never interrupt the reveal workflow.
+      // Missing files or blocked browser audio should never interrupt the reveal workflow.
     }
   }
 

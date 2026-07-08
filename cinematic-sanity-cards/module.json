@@ -2,7 +2,7 @@
   "id": "cinematic-sanity-cards",
   "title": "Cinematic Sanity Cards",
   "description": "Show uploaded card images to selected players with a cinematic fullscreen totem reveal animation.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "compatibility": {
     "minimum": "13",
     "verified": "13"

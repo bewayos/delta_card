@@ -1,6 +1,6 @@
 import { MODULE_ID, registerSettings } from "./card-store.js";
 import { CinematicSanityCardsPanel } from "./gm-panel.js";
-import { registerSocket } from "./socket.js";
+import { registerSocket, sendCardReveal } from "./socket.js";
 
 let panel;
 
@@ -11,7 +11,8 @@ Hooks.once("init", () => {
 Hooks.once("ready", () => {
   registerSocket();
   game.cinematicSanity = {
-    open: openCinematicSanityCardsPanel
+    open: openCinematicSanityCardsPanel,
+    show: sendCardReveal
   };
 });
 
@@ -71,7 +72,10 @@ Hooks.on("renderSettings", (app, html) => {
 });
 
 export function openCinematicSanityCardsPanel() {
-  if (!game.user?.isGM) return;
+  if (!game.user?.isGM) {
+    ui.notifications?.warn("Only a GM can open Cinematic Sanity Cards.");
+    return;
+  }
   panel ??= new CinematicSanityCardsPanel();
   panel.render({ force: true });
 }
