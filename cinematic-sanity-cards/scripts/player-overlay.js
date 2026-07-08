@@ -2,6 +2,13 @@ import { MODULE_ID } from "./card-store.js";
 
 const OVERLAY_ID = `${MODULE_ID}-overlay`;
 const ICON_ID = `${MODULE_ID}-collapsed`;
+const CRT_FRAME_PATH = "modules/cinematic-sanity-cards/assets/tv frame.png";
+const CRT_SCREEN = Object.freeze({
+  left: 12.8,
+  top: 15.8,
+  width: 69.2,
+  height: 66.0
+});
 
 export class PlayerOverlay {
   static current = null;
@@ -10,6 +17,8 @@ export class PlayerOverlay {
     this.current = { card, folder, options };
     this.#removeOverlay();
     this.#removeIcon();
+    this.#playSound(options.revealAccentSound, options.revealAccentVolume, options);
+    this.#playSound(options.revealHumSound, options.revealHumVolume, options);
 
     const overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
@@ -18,7 +27,9 @@ export class PlayerOverlay {
       <div class="csc-scanlines" aria-hidden="true"></div>
       <button type="button" class="csc-close" aria-label="Close card reveal"><i class="fas fa-times"></i></button>
       <figure class="csc-card-frame">
-        <img class="csc-card-image" alt="${foundry.utils.escapeHTML(card.name)}" src="${card.image}">
+        <span class="csc-card-image-wrap">
+          <img class="csc-card-image" alt="${foundry.utils.escapeHTML(card.name)}" src="${card.image}">
+        </span>
         <figcaption>${foundry.utils.escapeHTML(card.name)}</figcaption>
       </figure>
     `;
@@ -35,14 +46,13 @@ export class PlayerOverlay {
     document.addEventListener("keydown", onKey);
 
     const duration = Number(options.animationDurationMs ?? 1600);
-    const collapseDelay = Number(options.collapseDelayMs ?? 4500);
     window.setTimeout(() => overlay.classList.remove("csc-flicker"), duration);
-    window.setTimeout(() => this.collapse(), Math.max(duration, collapseDelay));
   }
 
-  static collapse() {
+  static collapse({ playSound = true } = {}) {
     const overlay = document.getElementById(OVERLAY_ID);
-    if (!overlay || !this.current) return;
+    if (!overlay || !this.current || overlay.classList.contains("csc-collapsing")) return;
+    if (playSound) this.#playSound(this.current.options?.hideSound, this.current.options?.hideVolume, this.current.options);
     overlay.classList.add("csc-collapsing");
     window.setTimeout(() => {
       this.#removeOverlay();
@@ -51,8 +61,111 @@ export class PlayerOverlay {
   }
 
   static closeFullscreen() {
+    this.collapse({ playSound: true });
+  }
+
+  static #playSound(src, soundVolume, options = {}) {
+    if (!options.enableSound || !src) return;
+    const volume = Number(soundVolume);
+    try {
+      foundry.audio?.AudioHelper?.play?.({
+        src,
+        volume: Number.isFinite(volume) ? Math.min(1, Math.max(0, volume)) : 0.8,
+        autoplay: true,
+        loop: false
+      }, false)?.catch?.(() => {});
+    } catch (error) {
+      // Missing files or blocked browser audio should never interrupt the reveal workflow.
+    }
+  }
+
+  static showVideo({ videoId, autoplay = true, controls = false, allowClose = true, displayMode = "clean" } = {}) {
+    if (!videoId) return;
+    this.current = null;
     this.#removeOverlay();
-    if (this.current) this.#createIcon();
+    this.#removeIcon();
+
+    const overlay = document.createElement("div");
+    overlay.id = OVERLAY_ID;
+    overlay.className = `csc-video-overlay ${displayMode === "crt" ? "csc-video-overlay--crt" : "csc-overlay csc-video-overlay--clean"}`;
+    const params = new URLSearchParams({
+      autoplay: autoplay ? "1" : "0",
+      controls: controls ? "1" : "0",
+      rel: "0",
+      modestbranding: "1",
+      playsinline: "1"
+    });
+    const embedSrc = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
+    overlay.innerHTML = displayMode === "crt"
+      ? this.#videoCrtTemplate(embedSrc, allowClose)
+      : this.#videoCleanTemplate(embedSrc, allowClose);
+    document.body.appendChild(overlay);
+    if (displayMode === "crt") this.#prepareCrtFrame(overlay);
+
+    const close = () => {
+      if (overlay.classList.contains("csc-video-overlay--crt") && !overlay.classList.contains("csc-crt-shutdown")) {
+        overlay.classList.add("csc-crt-shutdown");
+        window.setTimeout(() => this.#removeOverlay(), 520);
+        return;
+      }
+      this.#removeOverlay();
+    };
+    if (allowClose) {
+      overlay.querySelector(".csc-video-close, .csc-close")?.addEventListener("click", close);
+      const onKey = (event) => {
+        if (event.key === "Escape") close();
+      };
+      overlay._cscKeyHandler = onKey;
+      document.addEventListener("keydown", onKey);
+    }
+  }
+
+  static #videoCleanTemplate(embedSrc, allowClose) {
+    return `
+      <div class="csc-scanlines" aria-hidden="true"></div>
+      ${allowClose ? '<button type="button" class="csc-close" aria-label="Close video"><i class="fas fa-times"></i></button>' : ""}
+      <div class="csc-video-frame">
+        <iframe
+          src="${embedSrc}"
+          title="Cinematic Sanity Cards Video"
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
+    `;
+  }
+
+  static #videoCrtTemplate(embedSrc, allowClose) {
+    const screenStyle = `left: ${CRT_SCREEN.left}%; top: ${CRT_SCREEN.top}%; width: ${CRT_SCREEN.width}%; height: ${CRT_SCREEN.height}%;`;
+    const frame = `<img class="csc-crt-frame" src="${CRT_FRAME_PATH}" alt="" aria-hidden="true">`;
+    return `
+      <div class="csc-video-backdrop"></div>
+      <div class="csc-crt-stage">
+        <div class="csc-crt-frame-box">
+          <div class="csc-crt-screen" style="${screenStyle}">
+            <iframe class="csc-crt-iframe" src="${embedSrc}" title="Cinematic Sanity Cards Video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+            <div class="csc-crt-scanlines"></div>
+            <div class="csc-crt-noise"></div>
+            <div class="csc-crt-vignette"></div>
+            <div class="csc-crt-glare"></div>
+            <div class="csc-crt-power-line"></div>
+          </div>
+          ${frame}
+        </div>
+      </div>
+      ${allowClose ? '<button type="button" class="csc-video-close" aria-label="Close video">×</button>' : ""}
+    `;
+  }
+
+  static #prepareCrtFrame(overlay) {
+    const frame = overlay.querySelector(".csc-crt-frame");
+    const frameBox = overlay.querySelector(".csc-crt-frame-box");
+    if (!frame) return;
+    frame.addEventListener("error", () => {
+      frame.remove();
+      frameBox?.classList.add("csc-crt-frame-box--no-frame");
+      console.warn(`Cinematic Sanity Cards | CRT TV frame failed to load: ${CRT_FRAME_PATH}. Showing CRT video without the PNG frame.`);
+    }, { once: true });
   }
 
   static #createIcon() {
