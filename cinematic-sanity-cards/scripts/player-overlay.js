@@ -10,6 +10,8 @@ export class PlayerOverlay {
     this.current = { card, folder, options };
     this.#removeOverlay();
     this.#removeIcon();
+    this.#playSound(options.revealAccentSound, options.revealAccentVolume, options);
+    this.#playSound(options.revealHumSound, options.revealHumVolume, options);
 
     const overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
@@ -18,7 +20,9 @@ export class PlayerOverlay {
       <div class="csc-scanlines" aria-hidden="true"></div>
       <button type="button" class="csc-close" aria-label="Close card reveal"><i class="fas fa-times"></i></button>
       <figure class="csc-card-frame">
-        <img class="csc-card-image" alt="${foundry.utils.escapeHTML(card.name)}" src="${card.image}">
+        <span class="csc-card-image-wrap">
+          <img class="csc-card-image" alt="${foundry.utils.escapeHTML(card.name)}" src="${card.image}">
+        </span>
         <figcaption>${foundry.utils.escapeHTML(card.name)}</figcaption>
       </figure>
     `;
@@ -35,14 +39,13 @@ export class PlayerOverlay {
     document.addEventListener("keydown", onKey);
 
     const duration = Number(options.animationDurationMs ?? 1600);
-    const collapseDelay = Number(options.collapseDelayMs ?? 4500);
     window.setTimeout(() => overlay.classList.remove("csc-flicker"), duration);
-    window.setTimeout(() => this.collapse(), Math.max(duration, collapseDelay));
   }
 
-  static collapse() {
+  static collapse({ playSound = true } = {}) {
     const overlay = document.getElementById(OVERLAY_ID);
-    if (!overlay || !this.current) return;
+    if (!overlay || !this.current || overlay.classList.contains("csc-collapsing")) return;
+    if (playSound) this.#playSound(this.current.options?.hideSound, this.current.options?.hideVolume, this.current.options);
     overlay.classList.add("csc-collapsing");
     window.setTimeout(() => {
       this.#removeOverlay();
@@ -51,8 +54,62 @@ export class PlayerOverlay {
   }
 
   static closeFullscreen() {
+    this.collapse({ playSound: true });
+  }
+
+  static #playSound(src, soundVolume, options = {}) {
+    if (!options.enableSound || !src) return;
+    const volume = Number(soundVolume);
+    try {
+      foundry.audio?.AudioHelper?.play?.({
+        src,
+        volume: Number.isFinite(volume) ? Math.min(1, Math.max(0, volume)) : 0.8,
+        autoplay: true,
+        loop: false
+      }, false)?.catch?.(() => {});
+    } catch (error) {
+      // Missing files or blocked browser audio should never interrupt the reveal workflow.
+    }
+  }
+
+  static showVideo({ videoId, autoplay = true, controls = false, allowClose = true } = {}) {
+    if (!videoId) return;
+    this.current = null;
     this.#removeOverlay();
-    if (this.current) this.#createIcon();
+    this.#removeIcon();
+
+    const overlay = document.createElement("div");
+    overlay.id = OVERLAY_ID;
+    overlay.className = "csc-overlay csc-video-overlay";
+    const params = new URLSearchParams({
+      autoplay: autoplay ? "1" : "0",
+      controls: controls ? "1" : "0",
+      rel: "0",
+      modestbranding: "1"
+    });
+    overlay.innerHTML = `
+      <div class="csc-scanlines" aria-hidden="true"></div>
+      ${allowClose ? '<button type="button" class="csc-close" aria-label="Close video"><i class="fas fa-times"></i></button>' : ""}
+      <div class="csc-video-frame">
+        <iframe
+          src="https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}"
+          title="Cinematic Sanity Cards Video"
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => this.#removeOverlay();
+    if (allowClose) {
+      overlay.querySelector(".csc-close")?.addEventListener("click", close);
+      const onKey = (event) => {
+        if (event.key === "Escape") close();
+      };
+      overlay._cscKeyHandler = onKey;
+      document.addEventListener("keydown", onKey);
+    }
   }
 
   static #createIcon() {

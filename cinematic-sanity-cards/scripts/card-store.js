@@ -4,6 +4,12 @@ export const DEFAULT_OPTIONS = Object.freeze({
   animationDurationMs: 1600,
   collapseDelayMs: 4500,
   enableSound: false,
+  revealAccentSound: "modules/cinematic-sanity-cards/assets/sounds/reveal-accent.ogg",
+  revealAccentVolume: 0.8,
+  revealHumSound: "modules/cinematic-sanity-cards/assets/sounds/reveal-hum.ogg",
+  revealHumVolume: 0.45,
+  hideSound: "modules/cinematic-sanity-cards/assets/sounds/card-hide.ogg",
+  hideVolume: 0.65,
   defaultRevealMode: "totem"
 });
 
@@ -30,11 +36,27 @@ function requireGM() {
   if (!game.user?.isGM) throw new Error("Only a GM can manage Cinematic Sanity Cards.");
 }
 
+function clampVolume(value, fallback) {
+  const volume = Number(value);
+  return Number.isFinite(volume) ? Math.min(1, Math.max(0, volume)) : fallback;
+}
+
+function normalizeOptions(options = {}) {
+  const legacyVolume = Number.isFinite(Number(options.volume)) ? Number(options.volume) : undefined;
+  return {
+    ...DEFAULT_OPTIONS,
+    ...options,
+    revealAccentVolume: clampVolume(options.revealAccentVolume, legacyVolume ?? DEFAULT_OPTIONS.revealAccentVolume),
+    revealHumVolume: clampVolume(options.revealHumVolume, legacyVolume ?? DEFAULT_OPTIONS.revealHumVolume),
+    hideVolume: clampVolume(options.hideVolume, legacyVolume ?? DEFAULT_OPTIONS.hideVolume)
+  };
+}
+
 function normalizeData(data = {}) {
   return {
     folders: Array.isArray(data.folders) ? data.folders : [],
     cards: Array.isArray(data.cards) ? data.cards : [],
-    options: { ...DEFAULT_OPTIONS, ...(data.options ?? {}) }
+    options: normalizeOptions(data.options)
   };
 }
 
@@ -68,6 +90,22 @@ export class CardStore {
 
   static getOptions() {
     return this.data.options;
+  }
+
+  static async setOptions(options) {
+    requireGM();
+    const data = this.data;
+    data.options = normalizeOptions({
+      ...data.options,
+      enableSound: Boolean(options.enableSound),
+      revealAccentSound: String(options.revealAccentSound ?? "").trim(),
+      revealAccentVolume: options.revealAccentVolume,
+      revealHumSound: String(options.revealHumSound ?? "").trim(),
+      revealHumVolume: options.revealHumVolume,
+      hideSound: String(options.hideSound ?? "").trim(),
+      hideVolume: options.hideVolume
+    });
+    return this.setData(data);
   }
 
   static getFolder(id) {

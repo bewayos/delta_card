@@ -1,19 +1,57 @@
-<section class="csc-section">
-  <h2>Reveal Card</h2>
-  <label>Target Player <select name="targetUserId">{{#each users}}<option value="{{id}}">{{name}}{{#if active}} ●{{/if}}{{#if isGM}} (GM){{/if}}</option>{{/each}}</select></label>
-  <label>Folder/Deck <select name="revealFolderId">{{#each folders}}<option value="{{id}}">{{name}}</option>{{/each}}</select></label>
-  <label>Card <select name="revealCardId"></select></label>
-  <div class="csc-preview"><span>No card selected</span></div>
-  <div class="csc-row"><button type="button" data-action="showSelected">Show Selected Card</button><button type="button" data-action="showRandom">Show Random From Folder</button></div>
-</section>
-<section class="csc-section">
-  <h2>Manage Folders</h2>
-  <ol class="csc-list">{{#each folders}}<li><strong>{{name}}</strong> <code>{{id}}</code><button type="button" data-action="deleteFolder" data-folder-id="{{id}}">Delete</button></li>{{/each}}</ol>
-  <div class="csc-grid"><label>Name <input name="folderName" type="text"></label><label>ID <input name="folderId" type="text"></label><button type="button" data-action="saveFolder">Add Folder</button></div>
-</section>
-<section class="csc-section">
-  <h2>Manage Cards</h2>
-  <input type="hidden" name="cardOriginalId">
-  <div class="csc-grid"><label>Card Name <input name="cardName" type="text"></label><label>Card ID <input name="cardId" type="text"></label><label>Folder <select name="cardFolderId">{{#each folders}}<option value="{{id}}">{{name}}</option>{{/each}}</select></label><label>Image Path <input name="cardImage" type="text"></label><button type="button" data-action="browseImage">Browse/Upload</button><button type="button" data-action="saveCard">Save Card</button></div>
-  <ol class="csc-card-list">{{#each cards}}<li><img src="{{image}}" alt="{{name}}"><span><strong>{{name}}</strong><code>{{id}}</code><small>{{folderId}}</small></span><button type="button" data-action="editCard" data-card-id="{{id}}">Edit</button><button type="button" data-action="deleteCard" data-card-id="{{id}}">Delete</button></li>{{/each}}</ol>
-</section>
+<div class="csc-gm-panel">
+  <nav class="csc-tabs" aria-label="Cinematic Sanity Cards tabs">
+    <button type="button" class="active" data-csc-tab-button="cards">Sanity Cards</button>
+    <button type="button" data-csc-tab-button="video">Video</button>
+  </nav>
+  <div class="csc-tab-content active" data-csc-tab="cards">
+    <section class="csc-section">
+      <h2>Reveal Card</h2>
+      <label>Target Player <select name="targetUserId">{{#each users}}<option value="{{id}}">{{name}}{{#if active}} ●{{/if}}{{#if isGM}} (GM){{/if}}</option>{{/each}}</select></label>
+      <label>Folder/Deck <select name="revealFolderId">{{#each folders}}<option value="{{id}}">{{name}}</option>{{/each}}</select></label>
+      <label>Card <select name="revealCardId"></select></label>
+      <div class="csc-preview"><span>No card selected</span></div>
+      <div class="csc-row"><button type="button" data-action="showSelected">Show Selected Card</button><button type="button" data-action="showRandom">Show Random From Folder</button></div>
+    </section>
+    <section class="csc-section">
+      <h2>Sound Settings</h2>
+      <label class="csc-checkbox"><input name="enableSound" type="checkbox" {{#if options.enableSound}}checked{{/if}}> Enable Sounds</label>
+      <div class="csc-grid">
+        <label>Reveal Accent Sound <span class="csc-path-row"><input name="revealAccentSound" type="text" value="{{options.revealAccentSound}}"><button type="button" data-action="browseSound" data-target="revealAccentSound">Browse</button><input class="csc-volume" name="revealAccentVolume" type="number" min="0" max="1" step="0.05" value="{{options.revealAccentVolume}}" aria-label="Reveal Accent Volume"></span></label>
+        <label>Reveal Hum Sound <span class="csc-path-row"><input name="revealHumSound" type="text" value="{{options.revealHumSound}}"><button type="button" data-action="browseSound" data-target="revealHumSound">Browse</button><input class="csc-volume" name="revealHumVolume" type="number" min="0" max="1" step="0.05" value="{{options.revealHumVolume}}" aria-label="Reveal Hum Volume"></span></label>
+        <label>Hide Sound <span class="csc-path-row"><input name="hideSound" type="text" value="{{options.hideSound}}"><button type="button" data-action="browseSound" data-target="hideSound">Browse</button><input class="csc-volume" name="hideVolume" type="number" min="0" max="1" step="0.05" value="{{options.hideVolume}}" aria-label="Hide Volume"></span></label>
+      </div>
+      <div class="csc-row"><button type="button" data-action="saveOptions">Save Sound Settings</button></div>
+    </section>
+    <section class="csc-section">
+      <h2>Manage Folders</h2>
+      <ol class="csc-list">{{#each folders}}<li><strong>{{name}}</strong> <code>{{id}}</code><button type="button" data-action="deleteFolder" data-folder-id="{{id}}">Delete</button></li>{{/each}}</ol>
+      <div class="csc-grid"><label>Name <input name="folderName" type="text"></label><label>ID <input name="folderId" type="text"></label><button type="button" data-action="saveFolder">Add Folder</button></div>
+    </section>
+    <section class="csc-section">
+      <h2>Manage Cards</h2>
+      <input type="hidden" name="cardOriginalId">
+      <div class="csc-grid"><label>Card Name <input name="cardName" type="text"></label><label>Card ID <input name="cardId" type="text"></label><label>Folder <select name="cardFolderId">{{#each folders}}<option value="{{id}}">{{name}}</option>{{/each}}</select></label><label>Image Path <input name="cardImage" type="text"></label><button type="button" data-action="browseImage">Browse/Upload</button><button type="button" data-action="saveCard">Save Card</button></div>
+      <ol class="csc-card-list">{{#each cards}}<li><img src="{{image}}" alt="{{name}}"><span><strong>{{name}}</strong><code>{{id}}</code><small>{{folderId}}</small></span><button type="button" data-action="editCard" data-card-id="{{id}}">Edit</button><button type="button" data-action="deleteCard" data-card-id="{{id}}">Delete</button></li>{{/each}}</ol>
+    </section>
+  </div>
+  <div class="csc-tab-content" data-csc-tab="video">
+    <section class="csc-section">
+      <h2>Video</h2>
+      <h3>Recipients</h3>
+      <label class="csc-checkbox"><input name="videoRecipientMe" type="checkbox" checked> Me (GM)</label>
+      <label class="csc-checkbox"><input name="videoRecipientActive" type="checkbox"> Active Players</label>
+      <div class="csc-user-list">
+        {{#each connectedUsers}}
+        <label class="csc-checkbox"><input name="videoRecipientUser" type="checkbox" value="{{id}}"> {{name}}{{#if isGM}} (GM){{/if}}</label>
+        {{/each}}
+      </div>
+      <h3>Video Source</h3>
+      <label>YouTube URL <input name="youtubeUrl" type="url" placeholder="https://youtu.be/XXXXXXXX"></label>
+      <h3>Controls</h3>
+      <label class="csc-checkbox"><input name="videoAutoplay" type="checkbox" checked> Autoplay</label>
+      <label class="csc-checkbox"><input name="videoControls" type="checkbox"> Show player controls</label>
+      <label class="csc-checkbox"><input name="videoAllowClose" type="checkbox" checked> Allow player close</label>
+      <div class="csc-row"><button type="button" data-action="previewVideo">Preview</button><button type="button" data-action="playVideo">Play</button></div>
+    </section>
+  </div>
+</div>
