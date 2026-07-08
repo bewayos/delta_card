@@ -2,7 +2,9 @@ import { MODULE_ID } from "./card-store.js";
 
 const OVERLAY_ID = `${MODULE_ID}-overlay`;
 const ICON_ID = `${MODULE_ID}-collapsed`;
-const CRT_FRAME_SRC = `modules/${MODULE_ID}/assets/frames/crt-tv-frame.png`;
+// No CRT frame PNG is currently present in the checked-in module assets; keep this
+// constant as the single source of truth when the real asset is added.
+const CRT_FRAME_PATH = "";
 const CRT_SCREEN = Object.freeze({
   left: 13.5,
   top: 17.5,
@@ -100,6 +102,7 @@ export class PlayerOverlay {
       ? this.#videoCrtTemplate(embedSrc, allowClose)
       : this.#videoCleanTemplate(embedSrc, allowClose);
     document.body.appendChild(overlay);
+    if (displayMode === "crt") this.#prepareCrtFrame(overlay);
 
     const close = () => this.#removeOverlay();
     if (allowClose) {
@@ -129,6 +132,7 @@ export class PlayerOverlay {
 
   static #videoCrtTemplate(embedSrc, allowClose) {
     const screenStyle = `left: ${CRT_SCREEN.left}%; top: ${CRT_SCREEN.top}%; width: ${CRT_SCREEN.width}%; height: ${CRT_SCREEN.height}%;`;
+    const frame = CRT_FRAME_PATH ? `<img class="csc-crt-frame" src="${CRT_FRAME_PATH}" alt="" aria-hidden="true">` : "";
     return `
       <div class="csc-video-backdrop"></div>
       <div class="csc-crt-stage">
@@ -140,11 +144,26 @@ export class PlayerOverlay {
             <div class="csc-crt-vignette"></div>
             <div class="csc-crt-glare"></div>
           </div>
-          <img class="csc-crt-frame" src="${CRT_FRAME_SRC}" alt="" aria-hidden="true">
+          ${frame}
         </div>
       </div>
       ${allowClose ? '<button type="button" class="csc-video-close" aria-label="Close video">×</button>' : ""}
     `;
+  }
+
+  static #prepareCrtFrame(overlay) {
+    const frame = overlay.querySelector(".csc-crt-frame");
+    const frameBox = overlay.querySelector(".csc-crt-frame-box");
+    if (!frame) {
+      frameBox?.classList.add("csc-crt-frame-box--missing-frame");
+      console.warn("Cinematic Sanity Cards | CRT TV frame asset is missing; showing CRT video without the PNG frame.");
+      return;
+    }
+    frame.addEventListener("error", () => {
+      frame.remove();
+      frameBox?.classList.add("csc-crt-frame-box--missing-frame");
+      console.warn(`Cinematic Sanity Cards | CRT TV frame failed to load: ${CRT_FRAME_PATH}. Showing CRT video without the PNG frame.`);
+    }, { once: true });
   }
 
   static #createIcon() {

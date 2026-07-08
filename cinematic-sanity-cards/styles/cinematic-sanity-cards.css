@@ -447,3 +447,18 @@
   from { opacity: 0; transform: translateY(22px) scale(0.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+.csc-crt-frame-box--missing-frame {
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgba(103, 255, 240, 0.55);
+  border-radius: 18px;
+  background: #050707;
+  box-shadow: 0 24px 38px rgba(0, 0, 0, 0.72);
+}
+
+.csc-crt-frame-box--missing-frame .csc-crt-screen {
+  left: 4% !important;
+  top: 4% !important;
+  width: 92% !important;
+  height: 92% !important;
+}
