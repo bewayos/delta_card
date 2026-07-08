@@ -17,7 +17,6 @@ Hooks.once("ready", () => {
 });
 
 Hooks.on("getSceneControlButtons", (controls) => {
-  if (!game.user?.isGM) return;
   const tokenControls = controls.tokens ?? controls.find?.((control) => control.name === "tokens");
   if (!tokenControls) return;
 
