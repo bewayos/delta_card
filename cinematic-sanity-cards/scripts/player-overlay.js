@@ -2,6 +2,13 @@ import { MODULE_ID } from "./card-store.js";
 
 const OVERLAY_ID = `${MODULE_ID}-overlay`;
 const ICON_ID = `${MODULE_ID}-collapsed`;
+const CRT_FRAME_SRC = `modules/${MODULE_ID}/assets/frames/crt-tv-frame.png`;
+const CRT_SCREEN = Object.freeze({
+  left: 13.5,
+  top: 17.5,
+  width: 67.5,
+  height: 62.0
+});
 
 export class PlayerOverlay {
   static current = null;
@@ -72,7 +79,7 @@ export class PlayerOverlay {
     }
   }
 
-  static showVideo({ videoId, autoplay = true, controls = false, allowClose = true } = {}) {
+  static showVideo({ videoId, autoplay = true, controls = false, allowClose = true, displayMode = "clean" } = {}) {
     if (!videoId) return;
     this.current = null;
     this.#removeOverlay();
@@ -80,36 +87,64 @@ export class PlayerOverlay {
 
     const overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
-    overlay.className = "csc-overlay csc-video-overlay";
+    overlay.className = `csc-video-overlay ${displayMode === "crt" ? "csc-video-overlay--crt" : "csc-overlay csc-video-overlay--clean"}`;
     const params = new URLSearchParams({
       autoplay: autoplay ? "1" : "0",
       controls: controls ? "1" : "0",
       rel: "0",
-      modestbranding: "1"
+      modestbranding: "1",
+      playsinline: "1"
     });
-    overlay.innerHTML = `
-      <div class="csc-scanlines" aria-hidden="true"></div>
-      ${allowClose ? '<button type="button" class="csc-close" aria-label="Close video"><i class="fas fa-times"></i></button>' : ""}
-      <div class="csc-video-frame">
-        <iframe
-          src="https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}"
-          title="Cinematic Sanity Cards Video"
-          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          allowfullscreen
-        ></iframe>
-      </div>
-    `;
+    const embedSrc = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
+    overlay.innerHTML = displayMode === "crt"
+      ? this.#videoCrtTemplate(embedSrc, allowClose)
+      : this.#videoCleanTemplate(embedSrc, allowClose);
     document.body.appendChild(overlay);
 
     const close = () => this.#removeOverlay();
     if (allowClose) {
-      overlay.querySelector(".csc-close")?.addEventListener("click", close);
+      overlay.querySelector(".csc-video-close, .csc-close")?.addEventListener("click", close);
       const onKey = (event) => {
         if (event.key === "Escape") close();
       };
       overlay._cscKeyHandler = onKey;
       document.addEventListener("keydown", onKey);
     }
+  }
+
+  static #videoCleanTemplate(embedSrc, allowClose) {
+    return `
+      <div class="csc-scanlines" aria-hidden="true"></div>
+      ${allowClose ? '<button type="button" class="csc-close" aria-label="Close video"><i class="fas fa-times"></i></button>' : ""}
+      <div class="csc-video-frame">
+        <iframe
+          src="${embedSrc}"
+          title="Cinematic Sanity Cards Video"
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
+    `;
+  }
+
+  static #videoCrtTemplate(embedSrc, allowClose) {
+    const screenStyle = `left: ${CRT_SCREEN.left}%; top: ${CRT_SCREEN.top}%; width: ${CRT_SCREEN.width}%; height: ${CRT_SCREEN.height}%;`;
+    return `
+      <div class="csc-video-backdrop"></div>
+      <div class="csc-crt-stage">
+        <div class="csc-crt-frame-box">
+          <div class="csc-crt-screen" style="${screenStyle}">
+            <iframe class="csc-crt-iframe" src="${embedSrc}" title="Cinematic Sanity Cards Video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+            <div class="csc-crt-scanlines"></div>
+            <div class="csc-crt-noise"></div>
+            <div class="csc-crt-vignette"></div>
+            <div class="csc-crt-glare"></div>
+          </div>
+          <img class="csc-crt-frame" src="${CRT_FRAME_SRC}" alt="" aria-hidden="true">
+        </div>
+      </div>
+      ${allowClose ? '<button type="button" class="csc-video-close" aria-label="Close video">×</button>' : ""}
+    `;
   }
 
   static #createIcon() {

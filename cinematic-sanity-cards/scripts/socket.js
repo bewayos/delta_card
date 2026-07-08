@@ -18,7 +18,8 @@ export function registerSocket() {
         videoId: payload.videoId,
         autoplay: payload.autoplay,
         controls: payload.controls,
-        allowClose: payload.allowClose
+        allowClose: payload.allowClose,
+        displayMode: payload.displayMode
       });
     }
   });
@@ -42,7 +43,7 @@ export function sendCardReveal({ targetUserId, card, folder = null, revealMode =
   return true;
 }
 
-export function sendVideoReveal({ targetUsers = [], videoId, autoplay = true, controls = false, allowClose = true }) {
+export function sendVideoReveal({ targetUsers = [], videoId, autoplay = true, controls = false, allowClose = true, displayMode = "clean" }) {
   if (!game.user?.isGM) {
     ui.notifications.warn("Only a GM can send Cinematic Sanity Cards videos.");
     return false;
@@ -63,8 +64,9 @@ export function sendVideoReveal({ targetUsers = [], videoId, autoplay = true, co
     videoId,
     autoplay: Boolean(autoplay),
     controls: Boolean(controls),
-    allowClose: Boolean(allowClose)
+    allowClose: Boolean(allowClose),
+    displayMode: displayMode === "crt" ? "crt" : "clean"
   });
-  if (recipients.includes(game.user.id)) PlayerOverlay.showVideo({ videoId, autoplay, controls, allowClose });
+  if (recipients.includes(game.user.id)) PlayerOverlay.showVideo({ videoId, autoplay, controls, allowClose, displayMode });
   return true;
 }

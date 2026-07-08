@@ -152,7 +152,8 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
       videoId: CinematicSanityCardsPanel.#extractYouTubeVideoId(app.element.querySelector("[name='youtubeUrl']")?.value),
       autoplay: app.element.querySelector("[name='videoAutoplay']")?.checked !== false,
       controls: app.element.querySelector("[name='videoControls']")?.checked === true,
-      allowClose: app.element.querySelector("[name='videoAllowClose']")?.checked !== false
+      allowClose: app.element.querySelector("[name='videoAllowClose']")?.checked !== false,
+      displayMode: app.element.querySelector("[name='videoDisplayMode']")?.value === "crt" ? "crt" : "clean"
     };
   }
 
