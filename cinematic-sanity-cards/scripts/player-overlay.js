@@ -72,6 +72,46 @@ export class PlayerOverlay {
     }
   }
 
+  static showVideo({ videoId, autoplay = true, controls = false, allowClose = true } = {}) {
+    if (!videoId) return;
+    this.current = null;
+    this.#removeOverlay();
+    this.#removeIcon();
+
+    const overlay = document.createElement("div");
+    overlay.id = OVERLAY_ID;
+    overlay.className = "csc-overlay csc-video-overlay";
+    const params = new URLSearchParams({
+      autoplay: autoplay ? "1" : "0",
+      controls: controls ? "1" : "0",
+      rel: "0",
+      modestbranding: "1"
+    });
+    overlay.innerHTML = `
+      <div class="csc-scanlines" aria-hidden="true"></div>
+      ${allowClose ? '<button type="button" class="csc-close" aria-label="Close video"><i class="fas fa-times"></i></button>' : ""}
+      <div class="csc-video-frame">
+        <iframe
+          src="https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}"
+          title="Cinematic Sanity Cards Video"
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen
+        ></iframe>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => this.#removeOverlay();
+    if (allowClose) {
+      overlay.querySelector(".csc-close")?.addEventListener("click", close);
+      const onKey = (event) => {
+        if (event.key === "Escape") close();
+      };
+      overlay._cscKeyHandler = onKey;
+      document.addEventListener("keydown", onKey);
+    }
+  }
+
   static #createIcon() {
     this.#removeIcon();
     const { card } = this.current ?? {};

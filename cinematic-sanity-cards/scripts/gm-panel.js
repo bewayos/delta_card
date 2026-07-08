@@ -1,5 +1,6 @@
 import { CardStore, MODULE_ID, slugify } from "./card-store.js";
-import { sendCardReveal } from "./socket.js";
+import { PlayerOverlay } from "./player-overlay.js";
+import { sendCardReveal, sendVideoReveal } from "./socket.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -13,6 +14,8 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
     actions: {
       showSelected: CinematicSanityCardsPanel.#handleShowSelected,
       showRandom: CinematicSanityCardsPanel.#handleShowRandom,
+      previewVideo: CinematicSanityCardsPanel.#previewVideo,
+      playVideo: CinematicSanityCardsPanel.#playVideo,
       browseImage: CinematicSanityCardsPanel.#browseImage,
       browseSound: CinematicSanityCardsPanel.#browseSound,
       saveOptions: CinematicSanityCardsPanel.#saveOptions,
@@ -31,7 +34,8 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
     const cards = CardStore.getCards();
     const users = game.users.contents.map((user) => ({ id: user.id, name: user.name, isGM: user.isGM, active: user.active }))
       .sort((a, b) => Number(b.active && !b.isGM) - Number(a.active && !a.isGM) || a.name.localeCompare(b.name));
-    return { folders, cards, users, options: CardStore.getOptions(), hasFolders: folders.length > 0, moduleId: MODULE_ID };
+    const connectedUsers = users.filter((user) => user.active);
+    return { folders, cards, users, connectedUsers, options: CardStore.getOptions(), hasFolders: folders.length > 0, moduleId: MODULE_ID };
   }
 
   _onRender(context, options) {
@@ -39,7 +43,19 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
     this.element.addEventListener("input", this.#onInput.bind(this));
     this.element.querySelector("[name='revealFolderId']")?.addEventListener("change", () => this.#refreshFilteredCards());
     this.element.querySelector("[name='revealCardId']")?.addEventListener("change", () => this.#refreshPreview());
+    this.element.querySelectorAll("[data-csc-tab-button]").forEach((button) => {
+      button.addEventListener("click", () => this.#activateTab(button.dataset.cscTabButton));
+    });
     this.#refreshFilteredCards();
+  }
+
+  #activateTab(tab) {
+    this.element.querySelectorAll("[data-csc-tab-button]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.cscTabButton === tab);
+    });
+    this.element.querySelectorAll("[data-csc-tab]").forEach((content) => {
+      content.classList.toggle("active", content.dataset.cscTab === tab);
+    });
   }
 
   #onInput(event) {
@@ -112,6 +128,59 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
     if (!candidates.length) return ui.notifications.warn("No cards match the selected folder or filter.");
     const card = candidates[Math.floor(Math.random() * candidates.length)];
     CinematicSanityCardsPanel.#sendReveal(this, user, card, { random: true });
+  }
+
+  static #extractYouTubeVideoId(value) {
+    const text = String(value ?? "").trim();
+    if (!text) return "";
+    try {
+      const url = new URL(text);
+      const host = url.hostname.replace(/^www\./, "").toLowerCase();
+      if (host === "youtu.be") return url.pathname.split("/").filter(Boolean)[0] ?? "";
+      if (host.endsWith("youtube.com")) {
+        if (url.pathname.startsWith("/embed/")) return url.pathname.split("/").filter(Boolean)[1] ?? "";
+        return url.searchParams.get("v") ?? "";
+      }
+    } catch (error) {
+      return /^[A-Za-z0-9_-]{11}$/.test(text) ? text : "";
+    }
+    return "";
+  }
+
+  static #getVideoOptions(app) {
+    return {
+      videoId: CinematicSanityCardsPanel.#extractYouTubeVideoId(app.element.querySelector("[name='youtubeUrl']")?.value),
+      autoplay: app.element.querySelector("[name='videoAutoplay']")?.checked !== false,
+      controls: app.element.querySelector("[name='videoControls']")?.checked === true,
+      allowClose: app.element.querySelector("[name='videoAllowClose']")?.checked !== false
+    };
+  }
+
+  static #getVideoRecipients(app) {
+    const recipients = new Set();
+    if (app.element.querySelector("[name='videoRecipientMe']")?.checked) recipients.add(game.user.id);
+    if (app.element.querySelector("[name='videoRecipientActive']")?.checked) {
+      for (const user of game.users.contents) {
+        if (user.active && !user.isGM) recipients.add(user.id);
+      }
+    }
+    for (const checkbox of app.element.querySelectorAll("[name='videoRecipientUser']:checked")) {
+      recipients.add(checkbox.value);
+    }
+    return Array.from(recipients);
+  }
+
+  static #previewVideo() {
+    const options = CinematicSanityCardsPanel.#getVideoOptions(this);
+    if (!options.videoId) return ui.notifications.warn("Enter a valid YouTube URL.");
+    PlayerOverlay.showVideo(options);
+  }
+
+  static #playVideo() {
+    const options = CinematicSanityCardsPanel.#getVideoOptions(this);
+    if (!options.videoId) return ui.notifications.warn("Enter a valid YouTube URL.");
+    const targetUsers = CinematicSanityCardsPanel.#getVideoRecipients(this);
+    if (sendVideoReveal({ targetUsers, ...options })) ui.notifications.info("Sent cinematic video.");
   }
 
   static #browseImage() {
