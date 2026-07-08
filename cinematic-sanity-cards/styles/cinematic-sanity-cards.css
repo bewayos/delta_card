@@ -105,27 +105,38 @@
 
 .csc-card-frame {
   position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  width: fit-content;
   max-width: 70vw;
   max-height: 82vh;
   margin: 0;
-  padding: 10px;
+  padding: 3px;
   background: #050707;
   border: 1px solid #67fff0;
-  box-shadow: 0 0 18px rgba(0, 255, 220, 0.72), 0 0 60px rgba(0, 120, 150, 0.38);
+  box-shadow: 0 0 12px rgba(0, 255, 220, 0.72), 0 0 34px rgba(0, 120, 150, 0.34);
   animation: csc-totem-reveal 1.6s cubic-bezier(0.2, 0.8, 0.18, 1) both;
+}
+
+.csc-card-image-wrap {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 70vw;
+  max-height: 82vh;
+  line-height: 0;
 }
 
 .csc-card-frame img {
   display: block;
   max-width: 70vw;
-  max-height: 76vh;
+  max-height: calc(82vh - 2rem);
   object-fit: contain;
   background: #101010;
 }
 
 .csc-card-frame figcaption {
   text-align: center;
-  margin-top: 0.4rem;
+  margin-top: 0.25rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -218,4 +229,236 @@
 
 @keyframes csc-collapse {
   to { transform: translate(calc(50vw - 70px), calc(50vh - 80px)) scale(0.08); opacity: 0; }
+}
+
+.cinematic-sanity-cards .window-content,
+.cinematic-sanity-cards .standard-form {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.cinematic-sanity-cards .csc-gm-panel {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.csc-checkbox {
+  flex-direction: row;
+  align-items: center;
+}
+
+.csc-path-row {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.csc-path-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.csc-path-row .csc-volume {
+  flex: 0 0 4.5rem;
+}
+
+.csc-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+}
+
+.csc-tabs button.active {
+  border-color: #67fff0;
+  box-shadow: 0 0 8px rgba(0, 255, 220, 0.35);
+}
+
+.csc-tab-content {
+  display: none;
+}
+
+.csc-tab-content.active {
+  display: block;
+}
+
+.csc-user-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.25rem;
+  margin: 0.5rem 0;
+}
+
+.csc-video-overlay {
+  animation: csc-backdrop 0.35s ease-out;
+}
+
+.csc-video-frame {
+  width: min(90vw, 160vh);
+  max-width: 90vw;
+  max-height: 90vh;
+  aspect-ratio: 16 / 9;
+  background: #050707;
+  border: 1px solid #67fff0;
+  box-shadow: 0 0 18px rgba(0, 255, 220, 0.58), 0 0 54px rgba(0, 120, 150, 0.32);
+  animation: csc-video-reveal 0.45s ease-out both;
+}
+
+.csc-video-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@keyframes csc-video-reveal {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.csc-video-overlay--crt {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #d8ffff;
+}
+
+.csc-video-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 8, 10, 0.92);
+  animation: csc-backdrop 0.35s ease-out both;
+}
+
+.csc-crt-stage {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, calc(88vh * 1.33));
+  max-width: 92vw;
+  max-height: 88vh;
+  animation: cscCrtFrameIn 0.55s cubic-bezier(0.2, 0.8, 0.18, 1) both;
+}
+
+.csc-crt-frame-box {
+  position: relative;
+  width: 100%;
+}
+
+.csc-crt-screen {
+  position: absolute;
+  z-index: 1;
+  border-radius: 10% / 14%;
+  overflow: hidden;
+  background: #020505;
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.95), inset 0 0 46px rgba(30, 255, 210, 0.14);
+  animation: cscCrtPowerOn 1.05s ease-out both, cscCrtFlicker 0.16s steps(2, end) 7 1.05s;
+}
+
+.csc-crt-iframe {
+  position: absolute;
+  inset: -2.5%;
+  width: 105%;
+  height: 105%;
+  border: 0;
+  filter: blur(0.25px) contrast(1.13) saturate(1.16);
+}
+
+.csc-crt-scanlines,
+.csc-crt-noise,
+.csc-crt-vignette,
+.csc-crt-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.csc-crt-scanlines {
+  background: linear-gradient(rgba(255, 255, 255, 0.08) 50%, rgba(0, 0, 0, 0.18) 50%);
+  background-size: 100% 4px;
+  mix-blend-mode: overlay;
+  opacity: 0.28;
+}
+
+.csc-crt-noise {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.18) 0 1px, transparent 1px);
+  background-size: 5px 5px;
+  opacity: 0.08;
+  animation: cscCrtNoise 0.22s steps(2, end) infinite;
+}
+
+.csc-crt-vignette {
+  box-shadow: inset 0 0 55px rgba(0, 0, 0, 0.9), inset 0 0 16px rgba(0, 255, 210, 0.15);
+}
+
+.csc-crt-glare {
+  background: radial-gradient(ellipse at 28% 18%, rgba(255, 255, 255, 0.16), transparent 28%);
+  mix-blend-mode: screen;
+}
+
+.csc-crt-frame {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.72));
+}
+
+.csc-video-close {
+  position: absolute;
+  right: 2rem;
+  top: 2rem;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #6ff;
+  background: rgba(0, 0, 0, 0.65);
+  color: #dfffff;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+@keyframes cscCrtPowerOn {
+  0% { clip-path: inset(49% 0 49% 0); filter: brightness(3); opacity: 0; }
+  18% { clip-path: inset(48% 0 48% 0); opacity: 1; }
+  42% { clip-path: inset(30% 0 30% 0); filter: brightness(2.2); }
+  70% { clip-path: inset(0 0 0 0); filter: brightness(1.35); }
+  82% { filter: brightness(0.85); }
+  100% { clip-path: inset(0 0 0 0); filter: brightness(1); opacity: 1; }
+}
+
+@keyframes cscCrtFlicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.86; }
+}
+
+@keyframes cscCrtNoise {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-3px, 2px); }
+}
+
+@keyframes cscCrtFrameIn {
+  from { opacity: 0; transform: translateY(22px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.csc-crt-frame-box--missing-frame {
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgba(103, 255, 240, 0.55);
+  border-radius: 18px;
+  background: #050707;
+  box-shadow: 0 24px 38px rgba(0, 0, 0, 0.72);
+}
+
+.csc-crt-frame-box--missing-frame .csc-crt-screen {
+  left: 4% !important;
+  top: 4% !important;
+  width: 92% !important;
+  height: 92% !important;
 }
