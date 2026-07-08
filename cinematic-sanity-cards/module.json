@@ -19,7 +19,7 @@
     "styles/cinematic-sanity-cards.css"
   ],
   "socket": true,
-  "url": "",
-  "manifest": "https://github.com/bewayos/delta_card/releases/latest/download/module.json",
-  "download": "https://github.com/bewayos/delta_card/releases/latest/download/cinematic-sanity-cards.zip"
+  "url": "https://github.com/bewayos/delta_card",
+  "manifest": "https://raw.githubusercontent.com/bewayos/delta_card/main/cinematic-sanity-cards/module.json",
+  "download": "https://github.com/bewayos/delta_card/archive/refs/heads/main.zip"
 }
