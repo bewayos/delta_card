@@ -2,14 +2,12 @@ import { MODULE_ID } from "./card-store.js";
 
 const OVERLAY_ID = `${MODULE_ID}-overlay`;
 const ICON_ID = `${MODULE_ID}-collapsed`;
-// No CRT frame PNG is currently present in the checked-in module assets; keep this
-// constant as the single source of truth when the real asset is added.
-const CRT_FRAME_PATH = "";
+const CRT_FRAME_PATH = "modules/cinematic-sanity-cards/assets/tv frame.png";
 const CRT_SCREEN = Object.freeze({
-  left: 13.5,
-  top: 17.5,
-  width: 67.5,
-  height: 62.0
+  left: 12.8,
+  top: 15.8,
+  width: 69.2,
+  height: 66.0
 });
 
 export class PlayerOverlay {
@@ -104,7 +102,14 @@ export class PlayerOverlay {
     document.body.appendChild(overlay);
     if (displayMode === "crt") this.#prepareCrtFrame(overlay);
 
-    const close = () => this.#removeOverlay();
+    const close = () => {
+      if (overlay.classList.contains("csc-video-overlay--crt") && !overlay.classList.contains("csc-crt-shutdown")) {
+        overlay.classList.add("csc-crt-shutdown");
+        window.setTimeout(() => this.#removeOverlay(), 520);
+        return;
+      }
+      this.#removeOverlay();
+    };
     if (allowClose) {
       overlay.querySelector(".csc-video-close, .csc-close")?.addEventListener("click", close);
       const onKey = (event) => {
@@ -132,7 +137,7 @@ export class PlayerOverlay {
 
   static #videoCrtTemplate(embedSrc, allowClose) {
     const screenStyle = `left: ${CRT_SCREEN.left}%; top: ${CRT_SCREEN.top}%; width: ${CRT_SCREEN.width}%; height: ${CRT_SCREEN.height}%;`;
-    const frame = CRT_FRAME_PATH ? `<img class="csc-crt-frame" src="${CRT_FRAME_PATH}" alt="" aria-hidden="true">` : "";
+    const frame = `<img class="csc-crt-frame" src="${CRT_FRAME_PATH}" alt="" aria-hidden="true">`;
     return `
       <div class="csc-video-backdrop"></div>
       <div class="csc-crt-stage">
@@ -143,6 +148,7 @@ export class PlayerOverlay {
             <div class="csc-crt-noise"></div>
             <div class="csc-crt-vignette"></div>
             <div class="csc-crt-glare"></div>
+            <div class="csc-crt-power-line"></div>
           </div>
           ${frame}
         </div>
@@ -154,14 +160,10 @@ export class PlayerOverlay {
   static #prepareCrtFrame(overlay) {
     const frame = overlay.querySelector(".csc-crt-frame");
     const frameBox = overlay.querySelector(".csc-crt-frame-box");
-    if (!frame) {
-      frameBox?.classList.add("csc-crt-frame-box--missing-frame");
-      console.warn("Cinematic Sanity Cards | CRT TV frame asset is missing; showing CRT video without the PNG frame.");
-      return;
-    }
+    if (!frame) return;
     frame.addEventListener("error", () => {
       frame.remove();
-      frameBox?.classList.add("csc-crt-frame-box--missing-frame");
+      frameBox?.classList.add("csc-crt-frame-box--no-frame");
       console.warn(`Cinematic Sanity Cards | CRT TV frame failed to load: ${CRT_FRAME_PATH}. Showing CRT video without the PNG frame.`);
     }, { once: true });
   }

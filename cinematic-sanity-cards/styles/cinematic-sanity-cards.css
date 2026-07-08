@@ -462,3 +462,159 @@
   width: 92% !important;
   height: 92% !important;
 }
+
+/* CRT Television mode uses the PNG frame as the only visible TV body. */
+.csc-crt-stage {
+  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.7));
+}
+
+.csc-crt-frame-box {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  transform: perspective(1200px) rotateX(0.8deg);
+}
+
+.csc-crt-screen {
+  transform: translateZ(0);
+  border-radius: 10% / 14%;
+  box-shadow:
+    inset 0 0 32px rgba(0, 0, 0, 0.96),
+    inset 0 0 68px rgba(18, 42, 34, 0.86),
+    0 0 18px rgba(176, 255, 225, 0.2),
+    0 0 28px rgba(98, 180, 150, 0.16);
+  animation:
+    cscCrtPowerOn 1.15s cubic-bezier(0.16, 0.8, 0.26, 1) both,
+    cscCrtFlicker 0.12s steps(2, end) 9 1.1s,
+    cscCrtJitter 7s steps(1, end) 1.35s infinite;
+}
+
+.csc-crt-iframe {
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  filter: blur(0.45px) contrast(1.18) saturate(1.12) brightness(0.98);
+  transform: scale(1.025);
+}
+
+.csc-crt-scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.16) 0,
+    rgba(255, 255, 255, 0.16) 1px,
+    rgba(0, 0, 0, 0.22) 2px,
+    rgba(0, 0, 0, 0.22) 4px
+  );
+  opacity: 0.18;
+  animation: cscCrtScanlineDrift 5.5s linear infinite;
+}
+
+.csc-crt-noise {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.24) 0 1px, transparent 1px),
+    radial-gradient(circle, rgba(120,255,210,0.16) 0 1px, transparent 1px);
+  background-position: 0 0, 3px 4px;
+  background-size: 6px 6px, 9px 9px;
+  opacity: 0.14;
+  mix-blend-mode: screen;
+  animation: cscCrtNoiseShift 0.18s steps(2, end) infinite;
+}
+
+.csc-crt-vignette {
+  background: radial-gradient(ellipse at center, transparent 44%, rgba(0, 0, 0, 0.42) 74%, rgba(0, 0, 0, 0.86) 100%);
+  box-shadow: inset 0 0 64px rgba(0, 0, 0, 0.98), inset 0 0 18px rgba(170, 255, 225, 0.15);
+}
+
+.csc-crt-glare {
+  background:
+    radial-gradient(ellipse at 26% 18%, rgba(255, 255, 255, 0.24), transparent 23%),
+    linear-gradient(120deg, transparent 18%, rgba(255, 255, 255, 0.08) 34%, transparent 48%);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+
+.csc-crt-power-line {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 50%;
+  height: 2px;
+  pointer-events: none;
+  background: rgba(235, 255, 250, 0.98);
+  box-shadow: 0 0 14px rgba(235, 255, 250, 0.95), 0 0 30px rgba(120, 255, 220, 0.55);
+  animation: cscCrtPowerLine 1.15s ease-out both;
+}
+
+.csc-crt-frame {
+  filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 8px rgba(180, 255, 230, 0.1));
+}
+
+.csc-crt-frame-box--no-frame {
+  /* No fake TV body: keep only the video/effects if the PNG cannot load. */
+  aspect-ratio: 4 / 3;
+}
+
+.csc-crt-frame-box--no-frame .csc-crt-screen {
+  left: 12.8% !important;
+  top: 15.8% !important;
+  width: 69.2% !important;
+  height: 66% !important;
+}
+
+.csc-crt-shutdown .csc-crt-screen {
+  animation: cscCrtShutdown 0.48s ease-in forwards;
+}
+
+.csc-crt-shutdown .csc-video-backdrop,
+.csc-crt-shutdown .csc-crt-stage {
+  opacity: 0;
+  transition: opacity 0.5s ease-in;
+}
+
+@keyframes cscCrtPowerOn {
+  0% { clip-path: inset(50% 0 50% 0); filter: brightness(0); opacity: 1; }
+  8% { clip-path: inset(49.6% 0 49.6% 0); filter: brightness(5); }
+  20% { clip-path: inset(47% 0 47% 0); filter: brightness(3.8); }
+  44% { clip-path: inset(24% 0 24% 0); filter: brightness(2.4) contrast(1.35); }
+  68% { clip-path: inset(0 0 0 0); filter: brightness(1.55) contrast(1.2); }
+  76% { filter: brightness(0.72) contrast(1.4); }
+  84% { filter: brightness(1.8) contrast(1.18); }
+  92% { filter: brightness(0.94) contrast(1.12); }
+  100% { clip-path: inset(0 0 0 0); filter: brightness(1) contrast(1); }
+}
+
+@keyframes cscCrtPowerLine {
+  0%, 72% { opacity: 1; transform: scaleX(0.08); }
+  84% { opacity: 0.88; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1); }
+}
+
+@keyframes cscCrtFlicker {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.78; filter: brightness(1.45); }
+}
+
+@keyframes cscCrtScanlineDrift {
+  from { transform: translateY(0); }
+  to { transform: translateY(8px); }
+}
+
+@keyframes cscCrtNoiseShift {
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(3px, -2px); }
+  66% { transform: translate(-2px, 2px); }
+  100% { transform: translate(1px, -1px); }
+}
+
+@keyframes cscCrtJitter {
+  0%, 92%, 100% { transform: translate(0, 0); }
+  93% { transform: translateX(1px); }
+  94% { transform: translate(-1px, 1px); }
+  95% { transform: translate(0, -1px); }
+}
+
+@keyframes cscCrtShutdown {
+  0% { clip-path: inset(0 0 0 0); filter: brightness(1.3); opacity: 1; }
+  55% { clip-path: inset(46% 0 46% 0); filter: brightness(4); opacity: 1; }
+  100% { clip-path: inset(50% 0 50% 0); filter: brightness(5); opacity: 0; }
+}
