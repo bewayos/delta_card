@@ -4,6 +4,10 @@ export const DEFAULT_OPTIONS = Object.freeze({
   animationDurationMs: 1600,
   collapseDelayMs: 4500,
   enableSound: false,
+  revealAccentSound: "modules/cinematic-sanity-cards/assets/sounds/reveal-accent.ogg",
+  revealHumSound: "modules/cinematic-sanity-cards/assets/sounds/reveal-hum.ogg",
+  hideSound: "modules/cinematic-sanity-cards/assets/sounds/card-hide.ogg",
+  volume: 0.8,
   defaultRevealMode: "totem"
 });
 
@@ -68,6 +72,21 @@ export class CardStore {
 
   static getOptions() {
     return this.data.options;
+  }
+
+  static async setOptions(options) {
+    requireGM();
+    const data = this.data;
+    const volume = Number(options.volume);
+    data.options = {
+      ...data.options,
+      enableSound: Boolean(options.enableSound),
+      revealAccentSound: String(options.revealAccentSound ?? "").trim(),
+      revealHumSound: String(options.revealHumSound ?? "").trim(),
+      hideSound: String(options.hideSound ?? "").trim(),
+      volume: Number.isFinite(volume) ? Math.min(1, Math.max(0, volume)) : DEFAULT_OPTIONS.volume
+    };
+    return this.setData(data);
   }
 
   static getFolder(id) {
