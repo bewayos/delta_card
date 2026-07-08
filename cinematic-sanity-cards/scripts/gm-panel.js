@@ -11,8 +11,8 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
     window: { title: "Cinematic Sanity Cards", icon: "fa-solid fa-id-card", resizable: true },
     position: { width: 780, height: 760 },
     actions: {
-      showSelected: CinematicSanityCardsPanel.#showSelected,
-      showRandom: CinematicSanityCardsPanel.#showRandom,
+      showSelected: CinematicSanityCardsPanel.#handleShowSelected,
+      showRandom: CinematicSanityCardsPanel.#handleShowRandom,
       browseImage: CinematicSanityCardsPanel.#browseImage,
       browseSound: CinematicSanityCardsPanel.#browseSound,
       saveOptions: CinematicSanityCardsPanel.#saveOptions,
@@ -68,19 +68,50 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
   static #target(app) { return app.element.querySelector("[name='targetUserId']")?.value; }
   static #folder(app) { return app.element.querySelector("[name='revealFolderId']")?.value; }
 
-  static #showSelected(event, target) {
-    const card = CardStore.getCard(this.element.querySelector("[name='revealCardId']")?.value);
-    if (!card) return ui.notifications.warn("Choose a card to reveal.");
-    const user = game.users.get(CinematicSanityCardsPanel.#target(this));
-    if (sendCardReveal({ targetUserId: user?.id, card, folder: CardStore.getFolder(card.folderId), revealMode: "totem" })) ui.notifications.info(`Sent card: ${card.name} to ${user.name}`);
+  static #getActiveToneFilter(app) {
+    return app.element.querySelector("[name='revealToneFilter'], [name='toneFilter'], [name='cardToneFilter'], [data-csc-tone-filter]")?.value ?? "";
   }
 
-  static #showRandom() {
-    const cards = CardStore.getCardsByFolder(CinematicSanityCardsPanel.#folder(this));
-    if (!cards.length) return ui.notifications.warn("No cards exist in the selected folder.");
-    const card = cards[Math.floor(Math.random() * cards.length)];
-    const user = game.users.get(CinematicSanityCardsPanel.#target(this));
-    if (sendCardReveal({ targetUserId: user?.id, card, folder: CardStore.getFolder(card.folderId), revealMode: "totem" })) ui.notifications.info(`Sent random card: ${card.name} to ${user.name}`);
+  static #cardMatchesToneFilter(card, filter) {
+    if (!filter) return true;
+    const normalized = String(filter).trim().toLowerCase();
+    if (!normalized || normalized === "all") return true;
+    const values = [card.tone, card.type, card.category, card.filter, ...(Array.isArray(card.tags) ? card.tags : [])]
+      .filter((value) => value != null)
+      .map((value) => String(value).trim().toLowerCase());
+    return values.includes(normalized);
+  }
+
+  static #getRandomCandidates(app) {
+    const folderId = CinematicSanityCardsPanel.#folder(app);
+    const toneFilter = CinematicSanityCardsPanel.#getActiveToneFilter(app);
+    return CardStore.getCardsByFolder(folderId).filter((card) => CinematicSanityCardsPanel.#cardMatchesToneFilter(card, toneFilter));
+  }
+
+  static #sendReveal(app, user, card, { random = false } = {}) {
+    if (!user) return ui.notifications.warn("Choose a valid target player.");
+    const folder = CardStore.getFolder(card.folderId);
+    if (sendCardReveal({ targetUserId: user.id, card, folder, revealMode: "totem" })) {
+      ui.notifications.info(`${random ? "Sent random card" : "Sent card"}: ${card.name} to ${user.name}`);
+    }
+  }
+
+  static #handleShowSelected() {
+    const targetUserId = CinematicSanityCardsPanel.#target(this);
+    const cardId = this.element.querySelector("[name='revealCardId']")?.value;
+    const user = game.users.get(targetUserId);
+    const card = CardStore.getCard(cardId);
+    if (!card) return ui.notifications.warn("Choose a card to reveal.");
+    CinematicSanityCardsPanel.#sendReveal(this, user, card);
+  }
+
+  static #handleShowRandom() {
+    const targetUserId = CinematicSanityCardsPanel.#target(this);
+    const user = game.users.get(targetUserId);
+    const candidates = CinematicSanityCardsPanel.#getRandomCandidates(this);
+    if (!candidates.length) return ui.notifications.warn("No cards match the selected folder or filter.");
+    const card = candidates[Math.floor(Math.random() * candidates.length)];
+    CinematicSanityCardsPanel.#sendReveal(this, user, card, { random: true });
   }
 
   static #browseImage() {
