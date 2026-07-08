@@ -8,6 +8,17 @@
     <div class="csc-row"><button type="button" data-action="showSelected">Show Selected Card</button><button type="button" data-action="showRandom">Show Random From Folder</button></div>
   </section>
   <section class="csc-section">
+    <h2>Sound Settings</h2>
+    <label class="csc-checkbox"><input name="enableSound" type="checkbox" {{#if options.enableSound}}checked{{/if}}> Enable Sounds</label>
+    <div class="csc-grid">
+      <label>Reveal Accent Sound <span class="csc-path-row"><input name="revealAccentSound" type="text" value="{{options.revealAccentSound}}"><button type="button" data-action="browseSound" data-target="revealAccentSound">Browse</button></span></label>
+      <label>Reveal Hum Sound <span class="csc-path-row"><input name="revealHumSound" type="text" value="{{options.revealHumSound}}"><button type="button" data-action="browseSound" data-target="revealHumSound">Browse</button></span></label>
+      <label>Hide Sound <span class="csc-path-row"><input name="hideSound" type="text" value="{{options.hideSound}}"><button type="button" data-action="browseSound" data-target="hideSound">Browse</button></span></label>
+      <label>Volume <input name="volume" type="range" min="0" max="1" step="0.05" value="{{options.volume}}"></label>
+    </div>
+    <div class="csc-row"><button type="button" data-action="saveOptions">Save Sound Settings</button></div>
+  </section>
+  <section class="csc-section">
     <h2>Manage Folders</h2>
     <ol class="csc-list">{{#each folders}}<li><strong>{{name}}</strong> <code>{{id}}</code><button type="button" data-action="deleteFolder" data-folder-id="{{id}}">Delete</button></li>{{/each}}</ol>
     <div class="csc-grid"><label>Name <input name="folderName" type="text"></label><label>ID <input name="folderId" type="text"></label><button type="button" data-action="saveFolder">Add Folder</button></div>
