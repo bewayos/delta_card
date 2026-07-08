@@ -14,6 +14,8 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
       showSelected: CinematicSanityCardsPanel.#showSelected,
       showRandom: CinematicSanityCardsPanel.#showRandom,
       browseImage: CinematicSanityCardsPanel.#browseImage,
+      browseSound: CinematicSanityCardsPanel.#browseSound,
+      saveOptions: CinematicSanityCardsPanel.#saveOptions,
       saveFolder: CinematicSanityCardsPanel.#saveFolder,
       deleteFolder: CinematicSanityCardsPanel.#deleteFolder,
       saveCard: CinematicSanityCardsPanel.#saveCard,
@@ -29,7 +31,7 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
     const cards = CardStore.getCards();
     const users = game.users.contents.map((user) => ({ id: user.id, name: user.name, isGM: user.isGM, active: user.active }))
       .sort((a, b) => Number(b.active && !b.isGM) - Number(a.active && !a.isGM) || a.name.localeCompare(b.name));
-    return { folders, cards, users, hasFolders: folders.length > 0, moduleId: MODULE_ID };
+    return { folders, cards, users, options: CardStore.getOptions(), hasFolders: folders.length > 0, moduleId: MODULE_ID };
   }
 
   _onRender(context, options) {
@@ -83,6 +85,28 @@ export class CinematicSanityCardsPanel extends HandlebarsApplicationMixin(Applic
 
   static #browseImage() {
     new FilePicker({ type: "image", current: this.element.querySelector("[name='cardImage']")?.value ?? "", callback: (path) => { this.element.querySelector("[name='cardImage']").value = path; } }).browse();
+  }
+
+  static #browseSound(event, target) {
+    const input = this.element.querySelector(`[name='${target.dataset.target}']`);
+    if (!input) return;
+    new FilePicker({ type: "audio", current: input.value ?? "", callback: (path) => { input.value = path; } }).browse();
+  }
+
+  static async #saveOptions() {
+    try {
+      await CardStore.setOptions({
+        enableSound: this.element.querySelector("[name='enableSound']")?.checked,
+        revealAccentSound: this.element.querySelector("[name='revealAccentSound']")?.value,
+        revealAccentVolume: this.element.querySelector("[name='revealAccentVolume']")?.value,
+        revealHumSound: this.element.querySelector("[name='revealHumSound']")?.value,
+        revealHumVolume: this.element.querySelector("[name='revealHumVolume']")?.value,
+        hideSound: this.element.querySelector("[name='hideSound']")?.value,
+        hideVolume: this.element.querySelector("[name='hideVolume']")?.value
+      });
+      ui.notifications.info("Sound options saved.");
+      this.render({ force: true });
+    } catch (error) { ui.notifications.error(error.message); }
   }
 
   static async #saveFolder() {
