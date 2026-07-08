@@ -27,9 +27,25 @@ Hooks.on("getSceneControlButtons", (controls) => {
 
 Hooks.on("renderSettings", (app, html) => {
   if (!game.user?.isGM) return;
-  const button = $(`<button type="button"><i class="fas fa-id-card"></i> Cinematic Sanity Cards</button>`);
-  button.on("click", () => openCinematicSanityCardsPanel());
-  html.find("#settings-game").append(button);
+
+  const root = html instanceof HTMLElement ? html : html?.[0] ?? html;
+  if (!root) return;
+
+  const settingsSection =
+    root.querySelector("#settings-game") ??
+    root.querySelector("[data-tab='settings']") ??
+    root.querySelector(".settings-sidebar") ??
+    root;
+
+  if (settingsSection.querySelector(`[data-action='${MODULE_ID}-open-panel']`)) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.action = `${MODULE_ID}-open-panel`;
+  button.innerHTML = '<i class="fas fa-id-card"></i> Cinematic Sanity Cards';
+  button.addEventListener("click", () => openCinematicSanityCardsPanel());
+
+  settingsSection.appendChild(button);
 });
 
 export function openCinematicSanityCardsPanel() {
